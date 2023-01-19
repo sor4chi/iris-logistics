@@ -75,15 +75,27 @@ string fill_space(string s, int n)
 {
   string res = s;
   for (int i = 0; i < n - s.size(); i++)
-  {
     res += " ";
-  }
   return res;
 }
 
 int main()
 {
   vector<Iris> data = read_csv(fp);
+  vector<Iris> train_data;
+  vector<Iris> test_data;
+
+  for (int i = 0; i < data.size(); i++)
+  {
+    if (i % 5 == 0)
+    {
+      test_data.push_back(data[i]);
+    }
+    else
+    {
+      train_data.push_back(data[i]);
+    }
+  }
 
   double w1 = 0.0;
   double w2 = 0.0;
@@ -99,13 +111,13 @@ int main()
     double w3_grad = 0.0;
     double w4_grad = 0.0;
     double b_grad = 0.0;
-    for (int j = 0; j < data.size(); j++)
+    for (int j = 0; j < train_data.size(); j++)
     {
-      double x = data[j].sepal_length;
-      double y = data[j].sepal_width;
-      double z = data[j].petal_length;
-      double w = data[j].petal_width;
-      double t = data[j].species == "Iris-setosa" ? 1.0 : 0.0;
+      double x = train_data[j].sepal_length;
+      double y = train_data[j].sepal_width;
+      double z = train_data[j].petal_length;
+      double w = train_data[j].petal_width;
+      double t = train_data[j].species == "Iris-setosa" ? 1.0 : 0.0;
       double y_ = sigmoid(w1 * x + w2 * y + w3 * z + w4 * w + b);
       w1_grad += (y_ - t) * x;
       w2_grad += (y_ - t) * y;
@@ -118,7 +130,7 @@ int main()
     w3 -= lr * w3_grad;
     w4 -= lr * w4_grad;
     b -= lr * b_grad;
-    l = loss(data, w1, w2, w3, w4, b);
+    l = loss(train_data, w1, w2, w3, w4, b);
     cout << "loss: " << l << endl;
   }
   cout << "w1: " << w1 << endl;
@@ -126,5 +138,25 @@ int main()
   cout << "w3: " << w3 << endl;
   cout << "w4: " << w4 << endl;
   cout << "b: " << b << endl;
+
+  int correct = 0;
+  for (int i = 0; i < test_data.size(); i++)
+  {
+    double x = test_data[i].sepal_length;
+    double y = test_data[i].sepal_width;
+    double z = test_data[i].petal_length;
+    double w = test_data[i].petal_width;
+    double t = test_data[i].species == "Iris-setosa" ? 1.0 : 0.0;
+    double y_ = sigmoid(w1 * x + w2 * y + w3 * z + w4 * w + b);
+    if (y_ > 0.5 && t == 1.0)
+    {
+      correct++;
+    }
+    else if (y_ <= 0.5 && t == 0.0)
+    {
+      correct++;
+    }
+  }
+  cout << "accuracy: " << (double)correct / test_data.size() << endl;
   return 0;
 }
